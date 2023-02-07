@@ -1,0 +1,39 @@
+FROM debian:stable AS builder
+
+ARG SYSROOT="/riscv"
+ARG QEMU_STATIC="/usr/bin/qemu-riscv64-static"
+ARG QEMU_VERSION="7.2.0"
+
+# install build essentials
+RUN apt-get update && \
+    apt-get install -y python3 build-essential git debootstrap debian-ports-archive-keyring git glib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev ninja-build pkg-config binfmt-support wget
+
+# Download and build QEMU
+RUN wget https://download.qemu.org/qemu-${QEMU_VERSION}.tar.xz && \
+    tar xvJf qemu-${QEMU_VERSION}.tar.xz && \
+    cd qemu-${QEMU_VERSION} && \
+    sh ./configure --target-list=riscv64-linux-user --static && \
+    make -j$(nproc) && \
+    cp ./build/qemu-riscv64 ${QEMU_STATIC}
+
+# debootstrap && second stage
+ENV DEBIAN_FRONTEND noninteractive
+RUN debootstrap --arch=riscv64 --foreign --keyring /usr/share/keyrings/debian-ports-archive-keyring.gpg --include=debian-ports-archive-keyring unstable ${SYSROOT}/ http://deb.debian.org/debian-ports && \
+    mkdir -p "${SYSROOT}/usr/bin" && \
+    cp ${QEMU_STATIC} "${SYSROOT}/usr/bin/" && \
+    chroot "${SYSROOT}" /debootstrap/debootstrap --second-stage
+
+# install build essentials in the RISC-V sysroot. Feel free to install other essentials!
+RUN chroot "${SYSROOT}" ${QEMU_STATIC} /usr/bin/apt-get update && \
+    chroot "${SYSROOT}" ${QEMU_STATIC} /usr/bin/apt-get install -y \
+        libzip-dev build-essential wget curl git which diffutils file make gcc time zip unzip \
+        libcups2-dev libx11-dev libxtst-dev libxt-dev libxrandr-dev libxrender-dev libx11-dev libxext-dev libasound2-dev \
+        libfreetype6-dev libffi-dev autoconf libfontconfig1-dev xvfb wget dos2unix && \
+    echo "alias ll='ls -l --color'" >> ${SYSROOT}/root/.bashrc
+
+# shrink: only keep the sysroot and qemu
+FROM scratch
+
+COPY --from=builder /riscv /
+
+CMD ["/bin/bash"]

@@ -1,0 +1,3 @@
+# .dockerignore file
+.idea
+.git
