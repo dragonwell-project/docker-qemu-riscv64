@@ -2,16 +2,16 @@ FROM debian:stable AS builder
 
 ARG SYSROOT="/riscv"
 ARG QEMU_STATIC="/usr/bin/qemu-riscv64-static"
-ARG QEMU_VERSION="7.2.0"
+ARG THE_QEMU_VERSION="7.2.0"
 
 # install build essentials
 RUN apt-get update && \
     apt-get install -y python3 build-essential git debootstrap debian-ports-archive-keyring git glib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev ninja-build pkg-config binfmt-support wget
 
 # Download and build QEMU
-RUN wget https://download.qemu.org/qemu-${QEMU_VERSION}.tar.xz && \
-    tar xvJf qemu-${QEMU_VERSION}.tar.xz && \
-    cd qemu-${QEMU_VERSION} && \
+RUN wget https://download.qemu.org/qemu-${THE_QEMU_VERSION}.tar.xz && \
+    tar xvJf qemu-${THE_QEMU_VERSION}.tar.xz && \
+    cd qemu-${THE_QEMU_VERSION} && \
     sh ./configure --target-list=riscv64-linux-user --static && \
     make -j$(nproc) && \
     cp ./build/qemu-riscv64 ${QEMU_STATIC}
