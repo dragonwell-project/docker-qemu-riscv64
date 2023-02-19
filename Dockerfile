@@ -19,20 +19,20 @@ RUN wget https://download.qemu.org/qemu-${THE_QEMU_VERSION}.tar.xz && \
 # debootstrap && second stage
 ENV DEBIAN_FRONTEND noninteractive
 RUN debootstrap --arch=riscv64 --foreign --keyring /usr/share/keyrings/debian-ports-archive-keyring.gpg --include=debian-ports-archive-keyring unstable ${SYSROOT}/ http://deb.debian.org/debian-ports && \
-    mkdir -p "${SYSROOT}/usr/bin" && \
-    cp ${QEMU_STATIC} "${SYSROOT}/usr/bin/" && \
-    chroot "${SYSROOT}" /debootstrap/debootstrap --second-stage
+    mkdir -p ${SYSROOT}/usr/bin && \
+    cp ${QEMU_STATIC} ${SYSROOT}/usr/bin/ && \
+    chroot ${SYSROOT} /debootstrap/debootstrap --second-stage
 
 # install build essentials in the RISC-V sysroot. Feel free to install other essentials!
-RUN chroot "${SYSROOT}" ${QEMU_STATIC} /usr/bin/apt-get update && \
-    chroot "${SYSROOT}" ${QEMU_STATIC} /usr/bin/apt-get install -y \
+RUN chroot ${SYSROOT} ${QEMU_STATIC} /usr/bin/apt-get update && \
+    chroot ${SYSROOT} ${QEMU_STATIC} /usr/bin/apt-get install -y \
         libzip-dev build-essential wget curl which diffutils file make gcc time zip unzip \
         libcups2-dev libx11-dev libxtst-dev libxt-dev libxrandr-dev libxrender-dev libx11-dev libxext-dev libasound2-dev \
         libfreetype6-dev libffi-dev autoconf libfontconfig1-dev xvfb wget dos2unix git && \
     echo "alias ll='ls -l --color'" >> ${SYSROOT}/root/.bashrc
 
 # For installing openjdk in a chroot environment: we need /proc (ant depends on openjdk)
-RUN --mount=type=bind,from=debian:stable,source=/proc,target=/riscv/proc chroot "${SYSROOT}" ${QEMU_STATIC} /usr/bin/apt-get install -y \
+RUN --mount=type=bind,from=debian:stable,source=/proc,target=${SYSROOT}/proc chroot ${SYSROOT} ${QEMU_STATIC} /usr/bin/apt-get install -y \
         ant
 
 # shrink: only keep the sysroot and qemu
