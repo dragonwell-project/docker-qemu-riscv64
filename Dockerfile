@@ -28,8 +28,12 @@ RUN chroot "${SYSROOT}" ${QEMU_STATIC} /usr/bin/apt-get update && \
     chroot "${SYSROOT}" ${QEMU_STATIC} /usr/bin/apt-get install -y \
         libzip-dev build-essential wget curl which diffutils file make gcc time zip unzip \
         libcups2-dev libx11-dev libxtst-dev libxt-dev libxrandr-dev libxrender-dev libx11-dev libxext-dev libasound2-dev \
-        libfreetype6-dev libffi-dev autoconf libfontconfig1-dev xvfb wget dos2unix && \
+        libfreetype6-dev libffi-dev autoconf libfontconfig1-dev xvfb wget dos2unix git && \
     echo "alias ll='ls -l --color'" >> ${SYSROOT}/root/.bashrc
+
+# For installing openjdk in a chroot environment: we need /proc (ant depends on openjdk)
+RUN --mount=type=bind,from=debian:stable,source=/proc,target=/riscv/proc chroot "${SYSROOT}" ${QEMU_STATIC} /usr/bin/apt-get install -y \
+        ant
 
 # shrink: only keep the sysroot and qemu
 FROM scratch
