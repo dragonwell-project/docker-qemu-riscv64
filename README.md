@@ -1,8 +1,10 @@
 # Build a RISC-V QEMU Docker
 
+Install the latest docker: https://docs.docker.com/engine/install/
+
 ```
 docker run --rm --privileged --net host multiarch/qemu-user-static --reset -p yes
-docker buildx build --network host --cache-from=type=local,src=/root/dockercache/qemu --cache-to=type=local,dest=/root/dockercache/qemu,mode=max . -t docker-qemu-riscv64 --load
+docker build . -t docker-qemu-riscv64
 ```
 
 Note that the `multiarch/qemu-user-static` updates binfmt so that RISC-V binaries could be recognizable, or the `docker build` command may fail.
