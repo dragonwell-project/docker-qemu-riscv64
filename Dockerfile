@@ -32,8 +32,9 @@ RUN chroot ${SYSROOT} ${QEMU_STATIC} /usr/bin/apt-get update && \
     echo "alias ll='ls -l --color'" >> ${SYSROOT}/root/.bashrc
 
 # For installing openjdk in a chroot environment: we need /proc (ant depends on openjdk)
-RUN --mount=type=bind,from=debian:stable,source=/proc,target=${SYSROOT}/proc chroot ${SYSROOT} ${QEMU_STATIC} /usr/bin/apt-get install -y \
-        ant
+RUN --mount=type=bind,from=debian:stable,source=/proc,target=${SYSROOT}/proc chroot ${SYSROOT} ${QEMU_STATIC} /usr/bin/apt-get install -y ant && \
+        wget https://repo1.maven.org/maven2/ant-contrib/ant-contrib/1.0b3/ant-contrib-1.0b3.jar -O ant-contrib.jar && \
+        mv ant-contrib.jar "${SYSROOT}"/usr/share/ant/lib/
 
 # shrink: only keep the sysroot and qemu
 FROM scratch
